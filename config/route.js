@@ -103,6 +103,12 @@ export default [
                 name: '帐号信息',
                 component: './AccountManage/accountInfo/index',
               },
+              {
+                path: '/account/receiveAddress',
+                icon: 'smile',
+                name: '收件地址',
+                component: './AccountManage/receiveAddress/index',
+              },
             ]
           },
           {
