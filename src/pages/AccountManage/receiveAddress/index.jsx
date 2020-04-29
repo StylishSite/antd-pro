@@ -1,56 +1,15 @@
 import React, { useState, useCallback } from 'react';
 import { connect } from 'umi';
-import { Spin, Popconfirm, Button, Alert } from 'antd';
+import { Spin, Popconfirm, Button, Alert, Pagination, Modal } from 'antd';
 import CommonTable from '@/components/CommonTable';
+import EditAddressModal from './component/EditAddressModal'; 
+import FooterToolbar from '@/components/FooterToolbar';
 
+const ReceiveAddress  = ({ loading, data, pagination, dispatch }) => {
 
-const datas = [
-  {
-    key: "1",
-    name: "John Brown",
-    area: '上海',
-    telephone: '139xxxxxxxx',
-    phone: '',
-    isDefault: true,
-    address: "New York No. 1 Lake Park",
-    tags: ["nice", "developer"]
-  },
-  {
-    key: "1",
-    name: "John Brown",
-    area: '上海',
-    telephone: '139xxxxxxxx',
-    phone: '',
-    isDefault: false,
-    address: "New York No. 1 Lake Park",
-    tags: ["nice", "developer"]
-  },
-  {
-    key: "1",
-    name: "John Brown",
-    area: '上海',
-    telephone: '139xxxxxxxx',
-    phone: '',
-    isDefault: false,
-    address: "New York No. 1 Lake Park",
-    tags: ["nice", "developer"]
-  },
-  {
-    key: "1",
-    name: "John Brown",
-    area: '上海',
-    telephone: '139xxxxxxxx',
-    phone: '',
-    isDefault: false,
-    address: "New York No. 1 Lake Park",
-    tags: ["nice", "developer"]
-  },
-];
-
-const ReceiveAddress  = ({ loading, receiveAddress, pagination }) => {
-
-  const [ data, setData ] = useState(datas);
-
+  const [ visible, setVisible ] = useState(false);
+  const [ title, setTitle ] = useState(undefined);
+  const [ item, setItem ] = useState({});
 
   const columns = [
     {
@@ -89,22 +48,22 @@ const ReceiveAddress  = ({ loading, receiveAddress, pagination }) => {
       title: "操作",
       key: "opera",
       dataIndex: 'isDefault',
-      render: (text) => (
+      render: (text, record) => (
         <span className="opera-span-common">
            <Popconfirm
             title={text ? '确定取消默认?' : '确定设为默认?'}
-            onConfirm={handleDelete}
+            onConfirm={() => handleSetDefault(record.isDefault, record.id) }
             okText="确定"
             cancelText="取消"
           >
           <span>{ text ? '取消默认' : '设为默认' }</span>
           </Popconfirm>
           <i>|</i>
-          <span onClick={() => handleVisible(1, {})}>编辑</span>
+          <span onClick={() => handleEditAddress(record)}>编辑</span>
           <i>|</i>
           <Popconfirm
             title="确定要删除吗?"
-            onConfirm={handleDelete}
+            onConfirm={() => handleDelete(record.id)}
             okText="确定"
             cancelText="取消"
           >
@@ -115,49 +74,98 @@ const ReceiveAddress  = ({ loading, receiveAddress, pagination }) => {
     },
   ];
 
-  const onTableChange = useCallback(() => (
-    console.log(11)
-    // dispatch({
-    //   type: 'userList/onTabChange',
-    //   payload: {
-    //     page
-    //   }
-    // })
-  ), [])
-
-  function handleDelete() {
-    console.log(123)
+  //点击新增地址
+  const handleAdd = () => {
+    if(data.length >= 20) {
+      Modal.info({ content: '收货地址最多保存二十条' });
+      return;
+    }
+    setVisible(true);
+    setTitle('新增收货地址');
   }
 
-
-  function handleClick() {
-    console.log(123);
-
-    setData([]);
+  //页码发生变化的回调
+  const handlePageChange = (current, size) => {
+    dispatch({
+      type: 'receiveAddress/pageChange',
+      payload: {
+        type: 1,
+        val: current
+      }
+    })
   }
 
-  function handleAdd() {
-
+  //pagesize发生变化的回调
+  const handlePageSizeChange = (current, size) => {
+    dispatch({
+      type: 'receiveAddress/pageChange',
+      payload: {
+        type: 2,
+        val: size
+      }
+    })
   }
 
-  const title = useCallback(() => {
+  //设置地址的默认状态
+  const handleSetDefault = (isDefault, id) => {
+    dispatch({
+      type: 'receiveAddress/setDefault',
+      payload: {
+        isDefault,
+        id
+      }
+    })
+  }
+
+  //删除地址
+  const handleDelete = (id) => (
+    dispatch({
+      type: 'receiveAddress/deleteAddress',
+      payload: {
+        id
+      }
+    })
+  ) 
+
+  //编辑地址
+
+  const handleEditAddress = val => {
+    setItem(val);
+    setVisible(true);
+    setTitle('编辑收货地址');
+  }
+
+  const handleOk = () => (
+    console.log('handleOk')
+  ) 
+
+  const handleCancel = () => {
+    setVisible(false);
+  }
+
+  const HeaderTitle = () => {
     return (
       <Button type="primary" onClick={handleAdd}>新增地址</Button>
     )
-  })
+  } 
 
   return  (
     <div className="zjf-container">
       <Spin spinning={loading}>
-        <h1 className="page-title" onClick={handleClick}>账号管理</h1>
+        <h1 className="page-title">账号管理</h1>
         <Alert style={{ marginBottom: '24px' }} message="收货地址最多保存20条，还可以保存12条" type="info" />
-        <CommonTable  data={datas} columns={columns} pagination={pagination} onChange={onTableChange} title={title} />
+        <CommonTable  data={data} columns={columns} pagination={false} title={HeaderTitle} />
+        <FooterToolbar>
+          <Pagination showQuickJumper showSizeChanger current={pagination.current} total={pagination.total} pageSize={pagination.pageSize} onShowSizeChange={handlePageSizeChange} onChange={handlePageChange} />
+        </FooterToolbar>
+        <EditAddressModal item={item}  title={title} visible={visible} handleOk={handleOk} handleCancel={handleCancel} />
       </Spin>
     </div>
   )
 }
 
 export default connect(({  receiveAddress, loading }) => ({
-  receiveAddress,
+  data: receiveAddress.data,
+  pagination: receiveAddress.pagination,
   loading: loading.global
 }))(ReceiveAddress)

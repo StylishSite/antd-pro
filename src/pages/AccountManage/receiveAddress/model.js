@@ -1,111 +1,115 @@
-import { query } from './service';
+import { query, deleteAddress } from './service';
+import { Modal } from 'antd';
 
 export default {
-  namespace: 'reveiveAddress',
+  namespace: 'receiveAddress',
 
   state: {
     data: [],//用户列表数据
-    querys: {},//搜索条件
     pagination: {//分页
       current: 1,
-      total: 3,
+      total: 0,
       pageSize: 10,
-      showSizeChanger: true,
-      showQuickJumper: true,
     }
   },
 
   subscriptions: {
     setup({ dispatch, history }) {
       history.listen((location) => {
-        // if(location.pathname === '/usermanage/userList') {
-        //   dispatch({ type: 'getUserList' });
-        // }
+        if(location.pathname === '/account/receiveAddress') {
+          dispatch({ type: 'getAddressList' });
+        }
       });
     },
   },
 
   effects: {
-    /**
-     * 同步表单信息
-     * @data {object} 发生更改的表单项 
-     */
-    * syncForm({ payload }, { put, call, select } ) {
-      const { data } = payload;
-      const { querys } = yield select(state => state.userList);
-      yield put({
-        type: 'updateAction',
-        payload: {
-          querys: {
-            ...querys,
-            ...data
-          }
-        }
-      })
-    },
 
-    //获取用户列表
-    * getUserList({ payload }, { put, call, select } ) {
-      const { querys, pagination } = yield select(state => state.userList);
-      const { data } = yield call(query,{
-        ...querys,
-        ...pagination
+    //获取收货地址列表
+    * getAddressList({ payload }, { put, call, select } ) {
+      const { pagination } = yield select(state => state.receiveAddress);
+      const { datas } = yield call(query,{
+        current: pagination.current,
+        pageSize: pagination.pageSize
       })
+
+      pagination.total = datas.total;
+      pagination.current = datas.current;
+      pagination.pageSize = datas.pageSize;
 
       yield put({
         type: 'updateAction',
         payload: {
-          data
+          data: datas.data,
+          pagination
         }
       })
     },
 
     /**
      * 表格页数变化
-     * @page {object} 表格页数变化后的对象 
+     * @type {number} 1: 页码变化， 2：页数变化
+     * @val {number} 变化后的值 
      */
-    * getUserList({ payload }, { put, call, select } ) {
-      const { querys, page } = yield select(state => state.userList);
-      const { data } = yield call(query,{
-        ...querys,
-        ...page
+    * pageChange({ payload }, { put, call, select } ) {
+      const { type, val } = payload;
+      const { pagination } = yield select(state => state.receiveAddress);
+      if(type === 1) {
+        pagination.current = val;
+      } else {
+        pagination.pageSize = val;
+      }
+      const { datas } = yield call(query,{
+        current: pagination.current,
+        pageSize: pagination.pageSize
       })
+
+      pagination.total = datas.total;
+      pagination.current = datas.current;
+      pagination.pageSize = datas.pageSize;
+
       yield put({
         type: 'updateAction',
         payload: {
-          data,
-          pagination: page
-        }
-      })
-    },
-
-    //点击查询按钮
-    * clickSearch({ payload }, { put, call, select } ) {
-      const { pagination, querys } = yield select(state => state.userList);
-      const { data } = yield call(query,{
-        ...querys,
-        pageSize: pagination.pageSize,
-        current: 1,
-      })
-
-      pagination.current = 1;//重置页数为1
-      yield put({
-        type: 'updateAction',
-        payload: {
-          data,
+          data: datas.data,
           pagination
         }
       })
     },
 
-    //点击查询按钮
-    * updateMark({ payload }, { put, call, select } ) {
-      const { mark, id } = payload;
-      yield call(query,{
-        id,
-        mark,
+    /**
+     * 设置地址默认
+     * @isDefault {boolean} 初始为默认还是非默认
+     * @id {number} 需要改变的地址的id 
+     */
+    * setDefault({ payload }, { put, call, select } ) {
+      const { isDefault, id } = payload;
+      if(isDefault) {
+        yield call(deleteAddress,{
+          id
+        })
+      } else {
+        yield call(deleteAddress,{
+         id
+        })
+      }
+      Modal.success({ content: '设置成功！' });
+
+      yield put({ type: 'getAddressList' });
+    },
+
+    /**
+     * 删除地址信息
+     * @isDefault {boolean} 初始为默认还是非默认
+     * @id {number} 需要改变的地址的id 
+     */
+    * deleteAddress({ payload }, { put, call, select } ) {
+      const { id } = payload;
+      yield call(deleteAddress,{
+        id
       })
-      dispatch({ type: 'getUserList'});
+      Modal.success({ content: '删除成功！' });
+      yield put({ type: 'getAddressList' });
     },
   },
 

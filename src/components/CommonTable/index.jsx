@@ -12,12 +12,8 @@ import { isEqual } from 'lodash';
  * @title {function} 表格顶部添加按钮
  */
 
- const defaultPage = {//默认的分页配置，可以手动传入分页配置进行覆盖
-   showSizeChanger: true,//支持改变每页展示条数
-   showQuickJumper: true,//支持快速跳转到某一页
- }
-
  function isRender(preProps, nextProps) {
+   //如果 两个值完全相同，那么返回 true，否则返回 false
   if(!isEqual(preProps.data, nextProps.data) || !isEqual(preProps.pagination, nextProps.pagination)) {
     return false;//当数据和分页发生变化时重新render
   }
@@ -32,7 +28,7 @@ export default React.memo(({ columns, data, pagination=null, onChange=null, rowS
       columns={columns} 
       dataSource={data} 
       onChange={onChange}
-      pagination={{ ...defaultPage, ...pagination }}
+      pagination={pagination}
       bordered
       title={title}
     />

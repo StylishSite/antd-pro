@@ -4,21 +4,13 @@ import defaultSettings from './defaultSettings';
 import routes from './route';
 export default defineConfig({
   hash: true,
-  antd: {
-  },
+  antd: {},
   dva: {
     hmr: true,
   },
   history: {
     type: 'hash'
   },
-  // locale: {
-  //   // default zh-CN
-  //   default: 'zh-CN',
-  //   // default true, when it is true, will use `navigator.language` overwrite default
-  //   antd: true,
-  //   baseNavigator: true,
-  // },
   dynamicImport: {
     loading: '@/components/PageLoading/index',
   },
@@ -35,10 +27,11 @@ export default defineConfig({
   ignoreMomentLocale: true,
   proxy: {
     '/api/': {
-      target: 'https://preview.pro.ant.design',
+      //target: 'http://192.168.10.6:1888',
+      target: 'https://sword.bladex.vip',
       changeOrigin: true,
       pathRewrite: {
-        '^': '',
+        '': '',
       },
     },
   },

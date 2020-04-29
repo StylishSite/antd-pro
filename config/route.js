@@ -6,7 +6,7 @@ export default [
       {
         name: 'login',
         path: '/user/login',
-        component: './user/login',
+        component: './User/login',
       },
     ],
   },
@@ -21,7 +21,13 @@ export default [
         routes: [
           {
             path: '/',
-            redirect: '/welcome',
+            redirect: '/home',
+          },
+          {
+            path: '/home',
+            icon: 'smile',
+            name: '首页',
+            component: './Home',
           },
           {
             path: '/welcome',
